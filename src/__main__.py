@@ -10,8 +10,9 @@ import logging
 from decimal import Decimal
 
 import pandas as pd
+from tqdm import tqdm
 
-from src import offers, filter_
+from src import filter_, offers
 from src.config import ROOT, USER_OFFERS
 
 
@@ -28,8 +29,8 @@ def get_lowest_market_price(df: pd.DataFrame) -> Decimal:
 user_offers = offers.extract_user_offers(ROOT + USER_OFFERS)
 market_offer_dfs = []
 
-for i, offer in list(user_offers.iterrows()):
-    logging.info("collecting marketplace offers for: %s", offer.card_name)
+for i, offer in tqdm(list(user_offers.iterrows())):
+    # logging.info("collecting marketplace offers for: %s", offer.card_name)
 
     query_suffix = filter_.build_query(
         seller_country="GREAT_BRITAIN",
@@ -45,10 +46,12 @@ for i, offer in list(user_offers.iterrows()):
 
 user_offers["price_delta"] = pd.Series(dtype=object)
 
-for (i, user_offer), market_offers in zip(
-    list(user_offers.iterrows()), market_offer_dfs
+for (i, user_offer), market_offers in tqdm(
+    zip(list(user_offers.iterrows()), market_offer_dfs)
 ):
-    logging.info("checking user offer vs the market rate for: %s", user_offer.card_name)
+    logging.debug(
+        "checking user offer vs the market rate for: %s", user_offer.card_name
+    )
     # Get the lowest price for the given filtered view
     lowest_market_price = market_offers.iloc[0].price
 

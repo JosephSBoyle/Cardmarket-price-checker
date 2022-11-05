@@ -4,6 +4,7 @@ import requests
 import bs4
 from decimal import Decimal
 from re import sub
+import logging
 
 
 def extract_user_offers(url: str) -> pd.DataFrame:
@@ -11,7 +12,21 @@ def extract_user_offers(url: str) -> pd.DataFrame:
 
     - TODO find the next page link and recursively append to the pandas dataframe.
     """
-    rows = _get_table_rows(url)
+    table_values = []
+
+    i = 1  # Cardmarket is 1-indexed for some reason LUL
+
+    while page_values := _extract_one_page_of_offers(url, page=i):
+        table_values.extend(page_values)
+        logging.info("finished extracting page %s of user offers.", i)
+
+        i += 1
+
+    return pd.DataFrame(table_values)
+
+
+def _extract_one_page_of_offers(url, page):
+    rows = _get_table_rows(url, page)
 
     table_values = []
     for row in rows:
@@ -27,6 +42,8 @@ def extract_user_offers(url: str) -> pd.DataFrame:
         if row.find("span", {"data-original-title", "Foil"}):
             is_foil = True
 
+        # FIXME
+        # Consider looking for a user who sells playsets as we need to consider that edge case (PPU etc.)
         table_values.append(
             {
                 "card_name": row_values[0],
@@ -38,7 +55,7 @@ def extract_user_offers(url: str) -> pd.DataFrame:
             }
         )
 
-    return pd.DataFrame(table_values)
+    return table_values
 
 
 # TODO refactor me
@@ -85,11 +102,15 @@ def extract_market_offers(url: str) -> pd.DataFrame:
     return pd.DataFrame(table_values)
 
 
-def _get_table_rows(url):
+def _get_table_rows(url, page=None):
     """Extract the table rows from a url.
 
     Assumes that table row's match a given html class name.
     """
+    if page:
+        query = "?site=" + str(page)
+        url += query
+
     res = requests.get(url)
     assert res.status_code == 200, "panic: request failed"
 

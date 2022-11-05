@@ -1,7 +1,7 @@
 pandas
 pytest
+tqdm
 
-# pandas.read_html
 lxml 
 html5lib
 bs4
