@@ -4,6 +4,7 @@ Supported attributes are:
 
 - Condition
 - Country  
+- Foil
 - Quantity  TODO
 
 """
@@ -11,9 +12,7 @@ from urllib.parse import urlencode
 
 
 def build_query(
-    *,
-    seller_country: str = None,
-    min_condition: str = None,
+    *, seller_country: str = None, min_condition: str = None, is_foil: bool = None
 ):
     """Return a query string of the given filters"""
 
@@ -23,6 +22,9 @@ def build_query(
 
     if min_condition:
         filters.append(_by_condition(min_condition))
+
+    if is_foil is not None:  # False is a valid value!
+        filters.append(_by_foil(is_foil))
 
     return "?" + urlencode(filters)
 
@@ -46,6 +48,11 @@ _CONDITIONS: dict[str, int] = {
 e.g "MT" -> 1, "GD" -> 4
 """
 
+_FOIL: dict[bool, str] = {
+    True: "Y",
+    False: "N",
+}
+
 
 def _by_seller_country(country: str):
     code = _COUNTRIES[country]
@@ -55,3 +62,8 @@ def _by_seller_country(country: str):
 def _by_condition(condition: str):
     code = _CONDITIONS[condition]
     return ("minCondition", code)
+
+
+def _by_foil(is_foil: bool):
+    code = _FOIL[is_foil]
+    return ("isFoil", code)

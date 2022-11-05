@@ -17,8 +17,10 @@ def test_extract_from_users_offers_page():
     assert df.card_name.dtype == object  # str
     assert df.cond.dtype == object  # str
 
-    assert df.avail.dtype == int  # int64
     assert df.price.dtype == object  # Decimal
+    assert df.is_foil.dtype == bool  # bool
+
+    assert df.avail.dtype == int  # int64
     assert df.marketplace_url.dtype == object  # str
 
     # Assert this user has at least 1 item for sale

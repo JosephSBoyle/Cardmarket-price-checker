@@ -28,12 +28,13 @@ def get_lowest_market_price(df: pd.DataFrame) -> Decimal:
 user_offers = offers.extract_user_offers(ROOT + USER_OFFERS)
 market_offer_dfs = []
 
-for _, offer in list(user_offers.iterrows()):
+for i, offer in list(user_offers.iterrows()):
     logging.info("collecting marketplace offers for: %s", offer.card_name)
 
     query_suffix = filter_.build_query(
         seller_country="GREAT_BRITAIN",
         min_condition=offer.cond,
+        is_foil=offer.is_foil,
     )
     marketplace_url = ROOT + offer.marketplace_url + query_suffix
 
@@ -42,7 +43,7 @@ for _, offer in list(user_offers.iterrows()):
 
 ###### Add the difference between the lowest market price matching the criteria and the user's price ######
 
-user_offers["price_delta"] = pd.Series()
+user_offers["price_delta"] = pd.Series(dtype=object)
 
 for (i, user_offer), market_offers in zip(
     list(user_offers.iterrows()), market_offer_dfs
@@ -58,4 +59,8 @@ for (i, user_offer), market_offers in zip(
 ###### Sort the user offers by price delta and render them ######
 
 user_offers.sort_values("price_delta", inplace=True, ascending=False)
+
+# Convert the URI into a full URL.
+user_offers["marketplace_url"] = ROOT + user_offers["marketplace_url"]
+
 print(user_offers.to_string())
