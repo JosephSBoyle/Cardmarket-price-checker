@@ -6,26 +6,12 @@ from decimal import Decimal
 from re import sub
 
 
-def _euro_money_to_decimal(string: str) -> Decimal:
-    stripped = sub(r"[^\d,]", "", string)  # "0,20 €" -> "0,20"
-    stripped = stripped.replace(",", ".")  # "0,20" -> "0.20"
-    return Decimal(stripped)
-
-
-def extract(url: str) -> pd.DataFrame:
+def extract_user_offers(url: str) -> pd.DataFrame:
     """Extract a dataframe containing each of a user's offers.
 
     - TODO find the next page link and recursively append to the pandas dataframe.
     """
-
-    res = requests.get(url)
-    assert res.status_code == 200, "panic: request failed"
-
-    soup = bs4.BeautifulSoup(res.content, "lxml")
-
-    # Match all rows in the table.
-    # We can't use `pd.read_table` unfortunately since the table doesn't use the correct <table>, <th>, <td> encoding
-    rows = soup.find_all("div", {"class": "row no-gutters article-row"})
+    rows = _get_table_rows(url)
 
     table_values = []
     for row in rows:
@@ -38,7 +24,7 @@ def extract(url: str) -> pd.DataFrame:
         product_url = row.find_all("a")[0]["href"]
         table_values.append(
             {
-                "name": row_values[0],
+                "card_name": row_values[0],
                 "cond": row_values[1],
                 "price": _euro_money_to_decimal(row_values[-2]),
                 "avail": int(row_values[-1]),
@@ -50,14 +36,8 @@ def extract(url: str) -> pd.DataFrame:
 
 
 def extract_market_offers(url: str) -> pd.DataFrame:
-    res = requests.get(url)
-    assert res.status_code == 200, "panic: request failed"
-
-    soup = bs4.BeautifulSoup(res.content, "lxml")
-
-    # Match all rows in the table.
-    # We can't use `pd.read_table` unfortunately since the table doesn't use the correct <table>, <th>, <td> encoding
-    rows = soup.find_all("div", {"class": "row no-gutters article-row"})
+    """Extract a dataframe of offers on a product page."""
+    rows = _get_table_rows(url)
 
     table_values = []
     for row in rows:
@@ -81,3 +61,27 @@ def extract_market_offers(url: str) -> pd.DataFrame:
         )
 
     return pd.DataFrame(table_values)
+
+
+def _get_table_rows(url):
+    """Extract the table rows from a url.
+    
+    Assumes that table row's match a given html class name.
+    """
+    res = requests.get(url)
+    assert res.status_code == 200, "panic: request failed"
+
+    soup = bs4.BeautifulSoup(res.content, "lxml")
+
+    # Match all rows in the table.
+    # We can't use `pd.read_table` unfortunately since the table doesn't use the correct <table>, <th>, <td> encoding
+    rows = soup.find_all("div", {"class": "row no-gutters article-row"})
+    return rows
+
+
+def _euro_money_to_decimal(string: str) -> Decimal:
+    stripped = sub(r"[^\d,]", "", string)  # "0,20 €" -> "0,20"
+    stripped = stripped.replace(",", ".")  # "0,20" -> "0.20"
+    return Decimal(stripped)
+
+

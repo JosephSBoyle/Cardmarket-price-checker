@@ -1,6 +1,6 @@
-from src.offers import extract, extract_market_offers
-
 import pandas as pd
+
+from src.offers import extract_market_offers, extract_user_offers
 
 
 def test_extract_from_users_offers_page():
@@ -9,10 +9,10 @@ def test_extract_from_users_offers_page():
     test_username = "Extasia1"
     url = "https://www.cardmarket.com/en/Magic/Users/" + test_username + "/Offers/Singles"
 
-    df = extract(url)
+    df = extract_user_offers(url)
     assert isinstance(df, pd.DataFrame)
 
-    assert df.name.dtype == object  # str
+    assert df.card_name.dtype == object  # str
     assert df.cond.dtype == object  # str
 
     assert df.avail.dtype == int  # int64
