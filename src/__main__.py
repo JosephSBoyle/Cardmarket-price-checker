@@ -13,23 +13,17 @@ from decimal import Decimal
 
 import pandas as pd
 
-from . import offers
-
-USERNAME = "Extasia1"  # TODO make this configurable
-ROOT = "https://www.cardmarket.com/"
-USER_OFFERS = "en/Magic/Users/" + USERNAME + "/Offers/Singles"
-N = -1
-CURRENCY_SYMBOL = "€"
-logging.basicConfig(level=logging.INFO)
+from src import offers
+from src.config import ROOT, USER_OFFERS
 
 
 def get_lowest_market_price(df: pd.DataFrame) -> Decimal:
-    """TODO"""
+    """Get the lowest market price
+    
+    The dataframe is sorted by default.
+    """
+    # TODO add filters here
     return df.iloc[0].price
-
-
-def monify(s) -> str:
-    return str(s) + CURRENCY_SYMBOL
 
 
 ###### Start - create a list of user offers ######
@@ -37,7 +31,7 @@ def monify(s) -> str:
 user_offers = offers.extract_user_offers(ROOT + USER_OFFERS)
 market_offer_dfs = []
 
-for _, offer in list(user_offers.iterrows())[:N]:
+for _, offer in list(user_offers.iterrows()):
     logging.info("collecting marketplace offers for: %s", offer.card_name)
 
     market_offers = offers.extract_market_offers(ROOT + offer.marketplace_url)
@@ -45,15 +39,18 @@ for _, offer in list(user_offers.iterrows())[:N]:
 
 ###### Add the difference between the lowest market price matching the criteria and the user's price ######
 
-user_offers["price_delta"] = pd.Series(dtype=object)
+user_offers["price_delta"] = pd.Series(
+    dtype=object
+)  # Add a column for storing decimals!
 
 for (i, user_offer), market_offers in zip(
-    list(user_offers.iterrows())[:N], market_offer_dfs
+    list(user_offers.iterrows()), market_offer_dfs
 ):
     logging.info("checking user offer vs the market rate for: %s", user_offer.card_name)
     lowest_market_price = get_lowest_market_price(market_offers)
 
-    # Iterrows provides us with a copy - we want to edit the table directly.
+    # Warning: df.iterrows provides us with a **copy** of the original data.
+    # Edit the table directly.
     user_offers.loc[i, "price_delta"] = Decimal(user_offer.price - lowest_market_price)
 
 ###### Sort the user offers by price delta and render them ######
