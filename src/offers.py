@@ -39,7 +39,7 @@ def _extract_one_page_of_offers(url, page):
         product_url = row.find_all("a")[0]["href"]
 
         is_foil = False
-        if row.find("span", {"data-original-title", "Foil"}):
+        if row.find("span", {"data-original-title": "Foil"}):
             is_foil = True
 
         # FIXME
@@ -111,15 +111,29 @@ def _get_table_rows(url, page=None):
         query = "?site=" + str(page)
         url += query
 
-    res = requests.get(url)
-    assert res.status_code == 200, "panic: request failed"
-
+    res = _get_request_with_retries(url)
     soup = bs4.BeautifulSoup(res.content, "lxml")
 
     # Match all rows in the table.
     # We can't use `pd.read_table` unfortunately since the table doesn't use the correct <table>, <th>, <td> encoding
     rows = soup.find_all("div", {"class": "row no-gutters article-row"})
     return rows
+
+
+def _get_request_with_retries(url: str) -> requests.Response:
+    """Get request that fails up to 3 times before re-raising the exception."""
+    failures = 0
+    while True:
+        try:
+            res = requests.get(url)
+            assert res.status_code == 200
+            return res
+        except Exception as exc:
+            logging.exception("failed to request a url 3 times %s", url)
+            failures += 1
+
+            if failures < 3:
+                raise exc
 
 
 def _euro_money_to_decimal(string: str) -> Decimal:
