@@ -13,8 +13,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from src import filter_, offers
-from src.config import ROOT, USER_OFFERS
-
+from src.config import ROOT, USER_OFFERS, USERNAME
+from datetime import datetime
 
 ###### Start - create a list of user offers ######
 
@@ -67,9 +67,18 @@ for (i, user_offer), market_offers in tqdm(
 
 user_offers.sort_values("price_delta", inplace=True, ascending=False)
 
-# Convert the URI into a full URL.
-user_offers["marketplace_url"] = ROOT + user_offers["marketplace_url"]
 
-# We have the `marketplace_url_with_filter`.
-user_offers.drop("marketplace_url")
-print(user_offers.to_string())
+# Index the columns and drop the `marketplace_url`.
+user_offers = user_offers[
+    [
+        "card_name",
+        "price",
+        "cond",
+        "is_foil",
+        "avail",
+        "price_delta",
+        "marketplace_url_with_filter",
+    ]
+]
+logging.info(user_offers.to_string())
+user_offers.to_csv(f"./results/{USERNAME}_{datetime.now().isoformat()}.csv")
