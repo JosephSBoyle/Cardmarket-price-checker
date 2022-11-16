@@ -13,12 +13,33 @@ import pandas as pd
 from tqdm import tqdm
 
 from src import filter_, offers
-from src.config import ROOT, USER_OFFERS, USERNAME
+from src.config import ROOT
 from datetime import datetime
+import sys
+
+DEBUG = False
+
+# TODO refactor
+# Use click or something?
+if len(sys.argv) >= 2:
+    # Load a username
+    # python -m src <username>
+    USERNAME = sys.argv[1]
+
+    if "-d" in sys.argv:
+        DEBUG = True
+else:
+    USERNAME = "Extasia1"
+
+max_pages = 1 if DEBUG else None
+
+USER_OFFERS = "en/Magic/Users/" + USERNAME + "/Offers/Singles"
+logging.info(USERNAME)
 
 ###### Start - create a list of user offers ######
 
-user_offers = offers.extract_user_offers(ROOT + USER_OFFERS)
+user_offers = offers.extract_user_offers(ROOT + USER_OFFERS, max_pages=max_pages)
+
 market_offer_dfs = []
 
 
@@ -65,9 +86,6 @@ for (i, user_offer), market_offers in tqdm(
 
 ###### Sort the user offers by price delta and render them ######
 
-user_offers.sort_values("price_delta", inplace=True, ascending=False)
-
-
 # Index the columns and drop the `marketplace_url`.
 user_offers = user_offers[
     [
@@ -81,4 +99,10 @@ user_offers = user_offers[
     ]
 ]
 logging.info(user_offers.to_string())
+
+user_offers["price_delta_over_price"] = (
+    user_offers["price_delta"] / user_offers["price"]
+)
+user_offers.sort_values(by="price_delta_over_price", inplace=True)
+
 user_offers.to_csv(f"./results/{USERNAME}_{datetime.now().isoformat()}.csv")

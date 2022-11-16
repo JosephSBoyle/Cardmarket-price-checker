@@ -5,6 +5,7 @@ Supported attributes are:
 - Condition
 - Country  
 - Foil
+- Language  TODO
 - Quantity  TODO
 
 """

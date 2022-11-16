@@ -1,13 +1,18 @@
-"""Module for extracting a user's cardmarket offers based on their unique cardmarket name."""
-import pandas as pd
-import requests
-import bs4
+"""Module for extracting a user's cardmarket offers based on their unique cardmarket name.
+TODO improve method names
+"""
+import logging
+import time
 from decimal import Decimal
 from re import sub
-import logging
+
+import bs4
+import pandas as pd
+import requests
+from typing import Optional
 
 
-def extract_user_offers(url: str) -> pd.DataFrame:
+def extract_user_offers(url: str, max_pages: Optional[int] = None) -> pd.DataFrame:
     """Extract a dataframe containing each of a user's offers.
 
     - TODO find the next page link and recursively append to the pandas dataframe.
@@ -20,6 +25,9 @@ def extract_user_offers(url: str) -> pd.DataFrame:
         table_values.extend(page_values)
         logging.info("finished extracting page %s of user offers.", i)
 
+        if i == max_pages:
+            break
+        
         i += 1
 
     return pd.DataFrame(table_values)
@@ -129,11 +137,13 @@ def _get_request_with_retries(url: str) -> requests.Response:
             assert res.status_code == 200
             return res
         except Exception as exc:
-            logging.exception("failed to request a url 3 times %s", url)
+            logging.exception("failed to request a url 3 times %s %s", url, res.content)
             failures += 1
 
             if failures < 3:
                 raise exc
+
+            time.sleep(10)
 
 
 def _euro_money_to_decimal(string: str) -> Decimal:
