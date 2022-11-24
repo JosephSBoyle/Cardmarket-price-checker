@@ -1,17 +1,44 @@
+from functools import partial
+from unittest.mock import patch
+
 import pandas as pd
+from requests import Response
 
 from src.offers import extract_market_offers, extract_user_offers
 
-# TODO patch requests.get to return a fixed response
+
+def _mock_get_request(*_args, content_fp: str, **_kwargs):
+    """Mock of ``requests.get`` that loads content from disk as the response.
+
+    :param content_fp: The path of the file to load response content from.
+    """
+    with open(content_fp, "r") as f:
+        content = f.read()
+
+    res = Response()
+    res._content = content
+    res.status_code = 200
+    return res
+
+
+_mock_get_user_offers = partial(
+    _mock_get_request,
+    content_fp="tests/fixtures/sample_user_offers.html",
+)
+
+_mock_get_market_offers = partial(
+    _mock_get_request,
+    content_fp="tests/fixtures/sample_market_offers.html",
+)
+
+
+@patch("requests.get", _mock_get_user_offers)
 def test_extract_from_users_offers_page():
     """Test extracting offers from user's page into a pandas dataframe."""
 
-    test_username = "Extasia1"
-    url = (
-        "https://www.cardmarket.com/en/Magic/Users/" + test_username + "/Offers/Singles"
+    df = extract_user_offers(
+        "https://www.cardmarket.com/en/Magic/Users/Extasia1/Offers/Singles", max_pages=1
     )
-
-    df = extract_user_offers(url)
     assert isinstance(df, pd.DataFrame)
 
     assert df.card_name.dtype == object  # str
@@ -23,11 +50,10 @@ def test_extract_from_users_offers_page():
     assert df.avail.dtype == int  # int64
     assert df.marketplace_url.dtype == object  # str
 
-    # Assert this user has at least 1 item for sale
-    # (if they don't then change the test user.)
     assert len(df.index) >= 1
 
-# TODO patch requests.get to return a fixed response
+
+@patch("requests.get", _mock_get_market_offers)  # Avoid making a network call.
 def test_extract_market_offers():
     """Test extracting offers from the public marketplace url."""
 

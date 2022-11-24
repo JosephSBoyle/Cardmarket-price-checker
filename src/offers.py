@@ -135,7 +135,7 @@ def _get_request_with_retries(url: str) -> requests.Response:
     while True:
         try:
             res = requests.get(url)
-            assert res.status_code == 200
+            assert res.ok
             return res
         except Exception as exc:
             logging.exception("failed to request %s %s times", url, failures)
