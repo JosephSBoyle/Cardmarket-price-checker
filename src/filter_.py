@@ -13,7 +13,11 @@ from urllib.parse import urlencode
 
 
 def build_query(
-    *, seller_country: str = None, min_condition: str = None, is_foil: bool = None
+    *,
+    seller_country: str = None,
+    min_condition: str = None,
+    language: str = None,
+    is_foil: bool = None,
 ):
     """Return a query string of the given filters"""
 
@@ -23,6 +27,9 @@ def build_query(
 
     if min_condition:
         filters.append(_by_condition(min_condition))
+
+    if language:
+        filters.append(_by_language(language))
 
     if is_foil is not None:  # False is a valid value!
         filters.append(_by_foil(is_foil))
@@ -54,6 +61,20 @@ _FOIL: dict[bool, str] = {
     False: "N",
 }
 
+_LANGUAGES: dict[str, int] = {
+    "english": 1,
+    "french": 2,
+    "german": 3,
+    "spanish": 4,
+    "italian": 5,
+    "s-chinese": 6,
+    "japanese": 7,
+    "portuguese": 8,
+    "russian": 9,
+    "korean": 10,
+    "t-chinese": 11,
+}
+
 
 def _by_seller_country(country: str):
     code = _COUNTRIES[country]
@@ -68,3 +89,9 @@ def _by_condition(condition: str):
 def _by_foil(is_foil: bool):
     code = _FOIL[is_foil]
     return ("isFoil", code)
+
+
+def _by_language(language: str):
+    language = language.lower()
+    code = _LANGUAGES[language]
+    return ("language", code)

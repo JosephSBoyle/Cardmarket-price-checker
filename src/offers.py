@@ -129,21 +129,26 @@ def _get_table_rows(url, page=None):
 
 
 def _get_request_with_retries(url: str) -> requests.Response:
-    """Get request that fails up to 3 times before re-raising the exception."""
+    """Get request that fails up to 10 times before re-raising the exception."""
     failures = 0
+    sleep_time = 2
     while True:
         try:
             res = requests.get(url)
             assert res.status_code == 200
             return res
         except Exception as exc:
-            logging.exception("failed to request a url 3 times %s %s", url, res.content)
+            logging.exception("failed to request %s %s times", url, failures)
             failures += 1
 
-            if failures < 3:
+            if failures < 10:
                 raise exc
 
-            time.sleep(10)
+            time.sleep(sleep_time)
+
+            # Exponential backoff
+            # 2, 4, 8, 16, 32, ...
+            sleep_time *= sleep_time
 
 
 def _euro_money_to_decimal(string: str) -> Decimal:

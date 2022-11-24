@@ -2,7 +2,7 @@ import pandas as pd
 
 from src.offers import extract_market_offers, extract_user_offers
 
-
+# TODO patch requests.get to return a fixed response
 def test_extract_from_users_offers_page():
     """Test extracting offers from user's page into a pandas dataframe."""
 
@@ -27,7 +27,7 @@ def test_extract_from_users_offers_page():
     # (if they don't then change the test user.)
     assert len(df.index) >= 1
 
-
+# TODO patch requests.get to return a fixed response
 def test_extract_market_offers():
     """Test extracting offers from the public marketplace url."""
 
