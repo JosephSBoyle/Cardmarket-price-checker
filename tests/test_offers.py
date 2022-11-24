@@ -48,6 +48,8 @@ def test_extract_from_users_offers_page():
     assert df.is_foil.dtype == bool  # bool
 
     assert df.avail.dtype == int  # int64
+    
+    assert df.language.dtype == object  # str
     assert df.marketplace_url.dtype == object  # str
 
     assert len(df.index) >= 1

@@ -1,24 +1,24 @@
 """Module for extracting a user's cardmarket offers based on their unique cardmarket name.
 TODO improve method names
+TODO add type hints
 """
 import logging
+import re
 import time
 from decimal import Decimal
-from re import sub
+from typing import Optional, Union
 
 import bs4
 import pandas as pd
 import requests
-from typing import Optional
+
+from .filter_ import LANGUAGES
 
 
 def extract_user_offers(url: str, max_pages: Optional[int] = None) -> pd.DataFrame:
-    """Extract a dataframe containing each of a user's offers.
+    """Extract a dataframe containing each of a user's offers."""
 
-    - TODO find the next page link and recursively append to the pandas dataframe.
-    """
     table_values = []
-
     i = 1  # Cardmarket is 1-indexed for some reason LUL
 
     while page_values := _extract_one_page_of_offers(url, page=i):
@@ -27,7 +27,6 @@ def extract_user_offers(url: str, max_pages: Optional[int] = None) -> pd.DataFra
 
         if i == max_pages:
             break
-        
         i += 1
 
     return pd.DataFrame(table_values)
@@ -47,6 +46,8 @@ def _extract_one_page_of_offers(url, page):
         product_url = row.find_all("a")[0]["href"]
 
         is_foil = False
+        language = _get_language(row)
+
         if row.find("span", {"data-original-title": "Foil"}):
             is_foil = True
 
@@ -59,6 +60,7 @@ def _extract_one_page_of_offers(url, page):
                 "price": _euro_money_to_decimal(row_values[-2]),
                 "is_foil": is_foil,
                 "avail": int(row_values[-1]),
+                "language": language,
                 "marketplace_url": product_url,
             }
         )
@@ -110,7 +112,28 @@ def extract_market_offers(url: str) -> pd.DataFrame:
     return pd.DataFrame(table_values)
 
 
-def _get_table_rows(url, page=None):
+_LANGUAGE_PATTERN = re.compile(
+    "|".join(LANGUAGES.keys()),
+    flags=re.IGNORECASE,
+)
+"""Regex pattern for matching any language supported by cardmarket."""
+
+
+def _get_language(row: bs4.element.Tag) -> Union[str, None]:
+    """Extract the language from an offer row.
+    If the language cannot be extracted, returns ``None``.
+    
+    Works on both user offers and market offers.
+    """
+    lang_div = row.find("span", {"data-original-title": _LANGUAGE_PATTERN})
+    matches = _LANGUAGE_PATTERN.findall(str(lang_div))
+
+    # There are sometimes more than one match in the div,
+    # but it will always be the same langauge.
+    return matches[0] if matches else None
+
+
+def _get_table_rows(url, page=None) -> bs4.BeautifulSoup:
     """Extract the table rows from a url.
 
     Assumes that table row's match a given html class name.
@@ -152,6 +175,6 @@ def _get_request_with_retries(url: str) -> requests.Response:
 
 
 def _euro_money_to_decimal(string: str) -> Decimal:
-    stripped = sub(r"[^\d,]", "", string)  # "0,20 €" -> "0,20"
+    stripped = re.sub(r"[^\d,]", "", string)  # "0,20 €" -> "0,20"
     stripped = stripped.replace(",", ".")  # "0,20" -> "0.20"
     return Decimal(stripped)

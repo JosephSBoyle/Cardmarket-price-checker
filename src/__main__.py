@@ -51,6 +51,7 @@ for i, offer in tqdm(list(user_offers.iterrows())):
         seller_country="GREAT_BRITAIN",
         min_condition=offer.cond,
         is_foil=offer.is_foil,
+        language=offer.language,
     )
     marketplace_url_with_filter = ROOT + offer.marketplace_url + query_suffix
     user_offers.loc[i, "marketplace_url_with_filter"] = marketplace_url_with_filter
@@ -92,6 +93,7 @@ user_offers = user_offers[
         "card_name",
         "price",
         "cond",
+        "language",
         "is_foil",
         "avail",
         "price_delta",
@@ -105,4 +107,5 @@ user_offers["price_delta_over_price"] = (
 )
 user_offers.sort_values(by="price_delta_over_price", inplace=True)
 
-user_offers.to_csv(f"./results/{USERNAME}_{datetime.now().isoformat()}.csv")
+subdir = "debug/" if DEBUG else ""
+user_offers.to_csv(f"./results/{subdir}{USERNAME}_{datetime.now().isoformat()}.csv")

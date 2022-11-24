@@ -5,21 +5,22 @@ Supported attributes are:
 - Condition
 - Country  
 - Foil
-- Language  TODO
+- Language
 - Quantity  TODO
 
 """
+from typing import Optional
 from urllib.parse import urlencode
 
 
 def build_query(
     *,
-    seller_country: str = None,
-    min_condition: str = None,
-    language: str = None,
-    is_foil: bool = None,
+    seller_country: Optional[str] = None,
+    min_condition: Optional[str] = None,
+    language: Optional[str] = None,
+    is_foil: Optional[bool] = None,
 ):
-    """Return a query string of the given filters"""
+    """Return a query string of the given filters."""
 
     filters = []
     if seller_country:
@@ -61,7 +62,7 @@ _FOIL: dict[bool, str] = {
     False: "N",
 }
 
-_LANGUAGES: dict[str, int] = {
+LANGUAGES: dict[str, int] = {
     "english": 1,
     "french": 2,
     "german": 3,
@@ -74,6 +75,10 @@ _LANGUAGES: dict[str, int] = {
     "korean": 10,
     "t-chinese": 11,
 }
+"""Map of languages to integer cardmarket codes.
+
+Note: is public since it's used in ``offers.py`` to create a regex pattern.
+"""
 
 
 def _by_seller_country(country: str):
@@ -93,5 +98,5 @@ def _by_foil(is_foil: bool):
 
 def _by_language(language: str):
     language = language.lower()
-    code = _LANGUAGES[language]
+    code = LANGUAGES[language]
     return ("language", code)
