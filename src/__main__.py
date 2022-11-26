@@ -7,43 +7,30 @@
 # 4. Render this data (possibly sort by difference along the way).
 
 import logging
+from datetime import datetime
 from decimal import Decimal
 
 import pandas as pd
 from tqdm import tqdm
 
 from src import filter_, offers
+from src.arg_parser import args
 from src.config import ROOT
-from datetime import datetime
-import sys
 
-DEBUG = False
+USER_OFFERS = "en/Magic/Users/" + args.user + "/Offers/Singles"
 
-# TODO refactor
-# Use click or something?
-if len(sys.argv) >= 2:
-    # Load a username
-    # python -m src <username>
-    USERNAME = sys.argv[1]
+if args.min_price:
+    USER_OFFERS += f"?minPrice={args.min_price}"
 
-    if "-d" in sys.argv:
-        DEBUG = True
-else:
-    USERNAME = "Extasia1"
-
-max_pages = 1 if DEBUG else None
-
-USER_OFFERS = "en/Magic/Users/" + USERNAME + "/Offers/Singles"
-logging.info(USERNAME)
+logging.info(ROOT + USER_OFFERS)
 
 ###### Start - create a list of user offers ######
 
-user_offers = offers.extract_user_offers(ROOT + USER_OFFERS, max_pages=max_pages)
+user_offers = offers.extract_user_offers(ROOT + USER_OFFERS, max_pages=args.pages)
+user_offers["marketplace_url_with_filter"] = pd.Series(dtype=object)
 
 market_offer_dfs = []
 
-
-user_offers["marketplace_url_with_filter"] = pd.Series(dtype=object)
 for i, offer in tqdm(list(user_offers.iterrows())):
     logging.debug("collecting marketplace offers for: %s", offer.card_name)
 
@@ -107,5 +94,5 @@ user_offers["price_delta_over_price"] = (
 )
 user_offers.sort_values(by="price_delta_over_price", inplace=True)
 
-subdir = "debug/" if DEBUG else ""
-user_offers.to_csv(f"./results/{subdir}{USERNAME}_{datetime.now().isoformat()}.csv")
+subdir = "debug/" if args.debug else ""
+user_offers.to_csv(f"./results/{subdir}{args.user}_{datetime.now().isoformat()}.csv")

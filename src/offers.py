@@ -171,7 +171,7 @@ def _get_request_with_retries(url: str) -> requests.Response:
 
             # Exponential backoff
             # 2, 4, 8, 16, 32, ...
-            sleep_time *= sleep_time
+            sleep_time *= 2
 
 
 def _euro_money_to_decimal(string: str) -> Decimal:
