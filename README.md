@@ -16,6 +16,11 @@ $ pip install -r requirements.txt
 $ python -m src --user <YOUR_CARDMARKET_USERNAME>
 ```
 
+3. (Optional) Run the test suite:
+```
+$ pytest
+```
+
 ### Optional Args:
 ```
 -h, --help
@@ -36,3 +41,17 @@ Analsying the single cards being sold by 'Extasia1' for 5 euros or more.
 ```
 $ python -m src --user Extasia1 --min_price 5
 ``` 
+
+### Notes:
+
+- 'Similar offerings' are those with:
+    - the same condition
+    - sold in the same country
+    - also foil / non-foil
+    - in the same language.
+
+- **N.B** Cardmarket limits query results to 300 singles (15 pages of results).
+        Larger sellers, may want to set a minimum price filter using the ``--min_price``
+        argument to get the most useful results.
+
+- Tested and developed on Python 3.9 on Ubuntu Linux.

@@ -1,5 +1,5 @@
 pandas
-pytest
+pytest      # Only required for development work.
 tqdm
 
 lxml 
