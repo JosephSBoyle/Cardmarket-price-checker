@@ -1,6 +1,8 @@
 """Module for extracting a user's cardmarket offers based on their unique cardmarket name.
 TODO improve method names
 TODO add type hints
+TODO add a verify url method that checks that the user is valid
+    e.g `Extasia` is not a user so this check should fail but `Extasia1` **is** a user so this check should pass.
 """
 import logging
 import re
