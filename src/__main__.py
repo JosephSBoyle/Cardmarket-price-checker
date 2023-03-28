@@ -9,13 +9,13 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pandas as pd
-from tqdm import tqdm
-
 from src import filter_, offers
 from src.arg_parser import args
 from src.config import ROOT
+from tqdm import tqdm
 
 USER_OFFERS = "en/Magic/Users/" + args.user + "/Offers/Singles"
 
@@ -95,4 +95,5 @@ user_offers["price_delta_over_price"] = (
 user_offers.sort_values(by="price_delta_over_price", inplace=True)
 
 subdir = "debug/" if args.debug else ""
-user_offers.to_csv(f"./results/{subdir}{args.user}_{datetime.now().isoformat()}.csv")
+outpath = Path(f"./results/{subdir}{args.user}_{datetime.today().date()}.csv")
+user_offers.to_csv(outpath)
