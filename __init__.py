@@ -1,1 +1,4 @@
-from .src import __all__  # Export the public interface of src
+from . import src
+
+# Export the public interface of src as this package's interface.
+__all__ = src.__all__
