@@ -39,11 +39,11 @@ def build_query(
 
 
 # TODO fill in other countries
-_COUNTRIES: dict[str, int] = {
+COUNTRIES: dict[str, int] = {
     "GREAT_BRITAIN": 13,
 }
 
-_CONDITIONS: dict[str, int] = {
+CONDITIONS: dict[str, int] = {
     "MT": 1,  # mint
     "NM": 2,  # near mint
     "EX": 3,  # excellent
@@ -57,7 +57,7 @@ _CONDITIONS: dict[str, int] = {
 e.g "MT" -> 1, "GD" -> 4
 """
 
-_FOIL: dict[bool, str] = {
+FOIL: dict[bool, str] = {
     True: "Y",
     False: "N",
 }
@@ -82,17 +82,17 @@ Note: is public since it's used in ``offers.py`` to create a regex pattern.
 
 
 def _by_seller_country(country: str):
-    code = _COUNTRIES[country]
+    code = COUNTRIES[country]
     return ("sellerCountry", code)
 
 
 def _by_condition(condition: str):
-    code = _CONDITIONS[condition]
+    code = CONDITIONS[condition]
     return ("minCondition", code)
 
 
 def _by_foil(is_foil: bool):
-    code = _FOIL[is_foil]
+    code = FOIL[is_foil]
     return ("isFoil", code)
 
 
